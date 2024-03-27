@@ -8,9 +8,13 @@ import requests
 import xml.etree.ElementTree as ET
 import pandas as pd
 import streamlit as st
-#import datetime as dt
+import datetime as dt
 from bokeh.plotting import figure 
 import datetime as dt
+
+# Page title
+st.set_page_config(page_title='CFD explorer', page_icon='📊')
+st.title('📊 Interactive CFD Explorer')
 
 @st.cache_data()
 def import_xml_url(url):
@@ -123,19 +127,21 @@ df = import_xml_url(url)
 #             '2019','2020','2021','2022']:
 #    df = pd.concat([df,import_xml_url('https://parapente.ffvl.fr/cfd/liste/'+year+'?xml=1')]) 
 
-# Page title
-st.set_page_config(page_title='CFD explorer', page_icon='📊')
-st.title('📊 Interactive CFD Explorer')
-
 with st.expander('About this app'):
   st.markdown('**Que fait cette app?**')
-  st.info('Cette app explore les classements de la CFD pour la saison 2023-2024')
-  st.markdown('**Comment l''utiliser ?**')
-  st.warning('Naviguez dans les menus, utilisez les filtres et ')
+  st.info('Cette app explore les données de la CFD pour la saison 2023-2024. Toutes les données sont extraites du site de la FFVL: https://parapente.ffvl.fr ')
+  st.markdown('**Comment l\'utiliser ?**')
+  st.warning('Naviguez dans les menus, utilisez les filtres. Plusieurs pages sont disponibles dans la barre latérale ')
+  st.markdown('**Comment l\'utiliser ?**')
+  st.warning('Contact :  cfdexplorer.pro@gmail.com')
   
-st.subheader('Which Movie Genre performs ($) best at the box office?')
+st.subheader('Actu de la CFD')
 
-st.text('Data provided by FFVL : https://parapente.ffvl.fr')
+st.info('Alors que le printemps émerge timidement, les premiers vols de plus de 100 km déploient leurs ailes, laissant entrevoir des exploits à venir !')
+st.info('Dans les Pyrénées, Florian Rivière nous a éblouis avec un vol époustouflant de 107 km, survolant les paysages de Loudenvielle à Tarascon. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356513)')
+st.info('De l\'autre côté, dans les confins de la Moselle, Etienne Coupez a navigué avec audace sur 114 km le long des frontières du Luxembourg et de la Belgique. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356622))')
+st.info('Et du haut des Alpes, Justin Puthod a réalisé une très belle trace avec un vol de 177 km, s\'envolant depuis Meruz, en direction des Aravis, vallée de Chamonix, Annecy, Bauges. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356318)) ')
+st.info('Ces premières prouesses aériennes ne font que présager des perfs dans les semaines à venir. La magie du parapente au printemps nous réserve encore de belles surprises.')
 
 #df = df.sort_values('points',ascending = False)
 df = df.sort_values('date',ascending = False)
@@ -147,15 +153,14 @@ df['week'] = df['date'].apply(lambda x: x.week)
 with st.sidebar:
     add_radio = st.radio(
         "Selection",
-        ("Introduction","Classement dernier mois", "Vue pilote","Vue Club","Contact")
+        ("News","Classement dernier mois", "Vue pilote","Vue Club","Contact")
     )
-    
+
 #if add_radio == "Classement par points":
 #    st.dataframe(df.head(100))
 
-if add_radio == "Introduction":
-    st.text('Cette app explore les classements de la CFD, saison 2023-2024')
-    st.text('Plusieurs vues sont disponibles dans la barre latérale')
+if add_radio == "News":
+
     df_show = df[["year","week","points"]].groupby(['year','week']).sum()
     df_show = df_show.sort_values(['year' , 'week'],ascending = True)
 
@@ -163,7 +168,7 @@ if add_radio == "Introduction":
     df_show_count = df_show_count.sort_values(['year' , 'week'],ascending = True)
 
     p2 = figure( title="Nombre de vols par semaine",
-        toolbar_location=None, tools="",x_axis_label="Semaine (2023-2024)")    
+        toolbar_location=None, tools="",x_axis_label="Semaine 2023-2024)")    
     p2.vbar(x=df_show_count.index.get_level_values('week').to_list(), top=df_show_count['points'],width=0.8)
     p2.xgrid.grid_line_color = None
     p2.y_range.start = 0
@@ -184,8 +189,8 @@ if add_radio == "Classement dernier mois":
     sel_cat = st.multiselect('Catégorie d''aile selectionnée : ',list(df_show['aile_class'].unique()),list(df_show['aile_class'].unique()))
 
     df_show = df_show[(df_show['aile_class'].isin(sel_cat))].sort_values('points',ascending = False)
-
-    st.dataframe(df_show.head(10))
+    st.write('TOP 100')
+    st.dataframe(df_show.head(100))
 
 elif add_radio == "Vue pilote":
     pilot = st.selectbox(
@@ -260,41 +265,3 @@ elif add_radio == "Vue Club":
 if add_radio == "Contact":
     st.write('App created by : cfdexplorer.pro@gmail.com')
   
-
-
-
-
-
-# Load data
-df = pd.read_csv('data/movies_genres_summary.csv')
-df.year = df.year.astype('int')
-
-# Input widgets
-## Genres selection
-genres_list = df.genre.unique()
-genres_selection = st.multiselect('Select genres', genres_list, ['Action', 'Adventure', 'Biography', 'Comedy', 'Drama', 'Horror'])
-
-## Year selection
-year_list = df.year.unique()
-year_selection = st.slider('Select year duration', 1986, 2006, (2000, 2016))
-year_selection_list = list(np.arange(year_selection[0], year_selection[1]+1))
-
-df_selection = df[df.genre.isin(genres_selection) & df['year'].isin(year_selection_list)]
-reshaped_df = df_selection.pivot_table(index='year', columns='genre', values='gross', aggfunc='sum', fill_value=0)
-reshaped_df = reshaped_df.sort_values(by='year', ascending=False)
-
-
-# Display DataFrame
-
-df_editor = st.data_editor(reshaped_df, height=212, use_container_width=True,
-                            column_config={"year": st.column_config.TextColumn("Year")},
-                            num_rows="dynamic")
-df_chart = pd.melt(df_editor.reset_index(), id_vars='year', var_name='genre', value_name='gross')
-
-# Display chart
-chart = alt.Chart(df_chart).mark_line().encode(
-            x=alt.X('year:N', title='Year'),
-            y=alt.Y('gross:Q', title='Gross earnings ($)'),
-            color='genre:N'
-            ).properties(height=320)
-st.altair_chart(chart, use_container_width=True)
