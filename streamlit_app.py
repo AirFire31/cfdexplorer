@@ -135,10 +135,6 @@ with st.expander('About this app'):
   
 st.subheader('Which Movie Genre performs ($) best at the box office?')
 
-
-st.title('CFD explorer')
-#st.title('Welcome the CFD explorer!👋')
-
 st.text('Data provided by FFVL : https://parapente.ffvl.fr')
 
 #df = df.sort_values('points',ascending = False)
