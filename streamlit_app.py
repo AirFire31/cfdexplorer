@@ -14,7 +14,7 @@ import datetime as dt
 
 # Page title
 st.set_page_config(page_title='CFD explorer', page_icon='📊')
-st.title('📊 Interactive CFD Explorer')
+st.title('📊 CFD Explorer')
 
 @st.cache_data()
 def import_xml_url(url):
@@ -137,11 +137,11 @@ with st.expander('About this app'):
   
 st.subheader('Actu de la CFD')
 
-st.info('Alors que le printemps émerge timidement, les premiers vols de plus de 100 km déploient leurs ailes, laissant entrevoir des exploits à venir !')
-st.info('Dans les Pyrénées, Florian Rivière nous a éblouis avec un vol époustouflant de 107 km, survolant les paysages de Loudenvielle à Tarascon. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356513)')
-st.info('De l\'autre côté, dans les confins de la Moselle, Etienne Coupez a navigué avec audace sur 114 km le long des frontières du Luxembourg et de la Belgique. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356622))')
-st.info('Et du haut des Alpes, Justin Puthod a réalisé une très belle trace avec un vol de 177 km, s\'envolant depuis Meruz, en direction des Aravis, vallée de Chamonix, Annecy, Bauges. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356318)) ')
-st.info('Ces premières prouesses aériennes ne font que présager des perfs dans les semaines à venir. La magie du parapente au printemps nous réserve encore de belles surprises.')
+st.write('Alors que le printemps émerge timidement, les premiers vols de plus de 100 km ont déjà été réalisé, laissant entrevoir des exploits à venir !')
+st.write('Dans les Pyrénées, Florian Rivière nous a éblouis avec un vol époustouflant de 107 km, survolant les paysages de Loudenvielle à Tarascon. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356513)')
+st.write('De l\'autre côté, dans les confins de la Moselle, Etienne Coupez a navigué avec audace sur 114 km le long des frontières du Luxembourg et de la Belgique. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356622))')
+st.write('Et du haut des Alpes, Justin Puthod a réalisé une très belle trace avec un vol de 177 km, s\'envolant depuis Meruz, en direction des Aravis, vallée de Chamonix, Annecy, Bauges. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356318)) ')
+st.write('Ces premières prouesses aériennes ne font que présager des perfs dans les semaines à venir. La magie du parapente au printemps nous réserve encore de belles surprises.')
 
 #df = df.sort_values('points',ascending = False)
 df = df.sort_values('date',ascending = False)
@@ -150,118 +150,119 @@ df['year'] = df['date'].apply(lambda x: x.year)
 df['week'] = df['date'].apply(lambda x: x.week)
 
 # Using "with" notation
-with st.sidebar:
-    add_radio = st.radio(
-        "Selection",
-        ("News","Classement dernier mois", "Vue pilote","Vue Club","Contact")
-    )
+#with st.sidebar:
+#    add_radio = st.radio(
+#        "Selection",
+#        ("News","Classement dernier mois", "Vue pilote","Vue Club","Contact")
+#    )
 
 #if add_radio == "Classement par points":
 #    st.dataframe(df.head(100))
 
-if add_radio == "News":
+#if add_radio == "News":
+st.subheader("Actu de la CFD")
+df_show = df[["year","week","points"]].groupby(['year','week']).sum()
+df_show = df_show.sort_values(['year' , 'week'],ascending = True)
 
-    df_show = df[["year","week","points"]].groupby(['year','week']).sum()
-    df_show = df_show.sort_values(['year' , 'week'],ascending = True)
+df_show_count = df[["year","week","points"]].groupby(['year','week']).count()
+df_show_count = df_show_count.sort_values(['year' , 'week'],ascending = True)
 
-    df_show_count = df[["year","week","points"]].groupby(['year','week']).count()
-    df_show_count = df_show_count.sort_values(['year' , 'week'],ascending = True)
+p2 = figure( title="Nombre de vols par semaine",
+    toolbar_location=None, tools="",x_axis_label="Semaine 2023-2024)")    
+p2.vbar(x=df_show_count.index.get_level_values('week').to_list(), top=df_show_count['points'],width=0.8)
+p2.xgrid.grid_line_color = None
+p2.y_range.start = 0
 
-    p2 = figure( title="Nombre de vols par semaine",
-        toolbar_location=None, tools="",x_axis_label="Semaine 2023-2024)")    
-    p2.vbar(x=df_show_count.index.get_level_values('week').to_list(), top=df_show_count['points'],width=0.8)
-    p2.xgrid.grid_line_color = None
-    p2.y_range.start = 0
+st.bokeh_chart(p2, use_container_width=True)
+
+#if add_radio == "Classement dernier mois":
+# Get today's date
+st.subheader('Classement par point sur le dernier mois')
+today = dt.datetime.now()
+
+# Calculate the date less than 1 month ago
+less_than_one_month_ago = dt.datetime.now() - dt.timedelta(days=30)
+#st.write(less_than_one_month_ago)
+df_show = df[df['date']>less_than_one_month_ago]
+df_show = df_show.sort_values('points',ascending = False)
+
+sel_cat = st.multiselect('Catégorie d''aile selectionnée : ',list(df_show['aile_class'].unique()),list(df_show['aile_class'].unique()))
+
+df_show = df_show[(df_show['aile_class'].isin(sel_cat))].sort_values('points',ascending = False)
+st.write('TOP 100')
+st.dataframe(df_show.head(100))
+
+#elif add_radio == "Vue pilote":
+st.subheader("Vue pilote")
+pilot = st.selectbox(
+    "Selection du pilote",
+    df['pilot'].unique()
+)
+
+df_select = df[df['pilot'] == pilot].sort_values('points',ascending = False)
+st.dataframe(df_select)
+df_select_plt = df_select['points']  
+
+#st.write(df_select['date'].dtype)
+date = df_select['date']
+flight_id = df_select['flight_id']
+takeOff = df_select['takeOff']
+takeOff2 =[]
+kk=0
+for el in takeOff:
+    kk += 1
+    takeOff2.append(el + ' - ' +str(kk))
     
-    st.bokeh_chart(p2, use_container_width=True)
-
-if add_radio == "Classement dernier mois":
-    # Get today's date
-    st.subheader('Classement par point sur le dernier mois')
-    today = dt.datetime.now()
-
-    # Calculate the date less than 1 month ago
-    less_than_one_month_ago = dt.datetime.now() - dt.timedelta(days=30)
-    #st.write(less_than_one_month_ago)
-    df_show = df[df['date']>less_than_one_month_ago]
-    df_show = df_show.sort_values('points',ascending = False)
-
-    sel_cat = st.multiselect('Catégorie d''aile selectionnée : ',list(df_show['aile_class'].unique()),list(df_show['aile_class'].unique()))
-
-    df_show = df_show[(df_show['aile_class'].isin(sel_cat))].sort_values('points',ascending = False)
-    st.write('TOP 100')
-    st.dataframe(df_show.head(100))
-
-elif add_radio == "Vue pilote":
-    pilot = st.selectbox(
-       "Selection du pilote",
-       df['pilot'].unique()
-    )
+counts = df_select['points']
     
-    df_select = df[df['pilot'] == pilot].sort_values('points',ascending = False)
-    st.dataframe(df_select)
-    df_select_plt = df_select['points']  
-    
-    #st.write(df_select['date'].dtype)
-    date = df_select['date']
-    flight_id = df_select['flight_id']
-    takeOff = df_select['takeOff']
-    takeOff2 =[]
-    kk=0
-    for el in takeOff:
-        kk += 1
-        takeOff2.append(el + ' - ' +str(kk))
-        
-    counts = df_select['points']
-        
-    p = figure(x_range=takeOff2, title="Meilleur score",
-               toolbar_location=None, tools="")
-    
-    p.vbar(x=takeOff2, top=counts,width=0.8)
-    
-    p.xgrid.grid_line_color = None
-    p.y_range.start = 0
-    p.xaxis.major_label_orientation = 3.14/4
-    st.bokeh_chart(p, use_container_width=True)
+p = figure(x_range=takeOff2, title="Meilleur score",
+            toolbar_location=None, tools="")
 
-elif add_radio == "Vue Club":
-    pilot = st.selectbox(
-       "Selection du club",
-       df['club'].sort_values().unique()
-    )
+p.vbar(x=takeOff2, top=counts,width=0.8)
+
+p.xgrid.grid_line_color = None
+p.y_range.start = 0
+p.xaxis.major_label_orientation = 3.14/4
+st.bokeh_chart(p, use_container_width=True)
+
+#elif add_radio == "Vue Club":
+st.subheader("Vue Club")
+pilot = st.selectbox(
+    "Selection du club",
+    df['club'].sort_values().unique()
+)
+
+df_select = df[(df['club'] == pilot)].sort_values('points',ascending = False)
+
+sel_cat = st.multiselect('Catégorie d''aile selectionnée : ',list(df_select['aile_class'].unique()),list(df_select['aile_class'].unique()))
+
+df_select = df[(df['club'] == pilot) & (df['aile_class'].isin(sel_cat))].sort_values('points',ascending = False)
+
+st.dataframe(df_select)
+
+df_select_plt = df_select['points']  
+
+
+date = df_select['date']
+flight_id = df_select['flight_id']
+takeOff = df_select['takeOff']
+takeOff2 =[]
+kk=0
+for el in takeOff:
+    kk += 1
+    takeOff2.append(el + ' - ' +str(kk))
     
-    df_select = df[(df['club'] == pilot)].sort_values('points',ascending = False)
-
-    sel_cat = st.multiselect('Catégorie d''aile selectionnée : ',list(df_select['aile_class'].unique()),list(df_select['aile_class'].unique()))
-
-    df_select = df[(df['club'] == pilot) & (df['aile_class'].isin(sel_cat))].sort_values('points',ascending = False)
-
-    st.dataframe(df_select)
+counts = df_select['points']
     
-    df_select_plt = df_select['points']  
+p = figure(x_range=takeOff2, title="Score",
+            toolbar_location=None, tools="")
+
+p.vbar(x=takeOff2, top=counts,width=0.8)
+
+p.xgrid.grid_line_color = None
+p.y_range.start = 0
+p.xaxis.major_label_orientation = 3.14/4
+st.bokeh_chart(p, use_container_width=True)
     
 
-    date = df_select['date']
-    flight_id = df_select['flight_id']
-    takeOff = df_select['takeOff']
-    takeOff2 =[]
-    kk=0
-    for el in takeOff:
-        kk += 1
-        takeOff2.append(el + ' - ' +str(kk))
-        
-    counts = df_select['points']
-        
-    p = figure(x_range=takeOff2, title="Score",
-               toolbar_location=None, tools="")
-    
-    p.vbar(x=takeOff2, top=counts,width=0.8)
-    
-    p.xgrid.grid_line_color = None
-    p.y_range.start = 0
-    p.xaxis.major_label_orientation = 3.14/4
-    st.bokeh_chart(p, use_container_width=True)
-    
-if add_radio == "Contact":
-    st.write('App created by : cfdexplorer.pro@gmail.com')
   
