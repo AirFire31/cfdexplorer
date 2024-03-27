@@ -162,17 +162,6 @@ if add_radio == "Introduction":
     df_show_count = df[["year","week","points"]].groupby(['year','week']).count()
     df_show_count = df_show_count.sort_values(['year' , 'week'],ascending = True)
 
-    #st.dataframe(df_show.head(100))
-    #sns.barplot(penguins, x="island", y="body_mass_g")
-    #st.write(df_show.index.get_level_values('week'))
-    #p = figure( title="Sum points",
-    #           toolbar_location=None, tools="")
-    
-    #p.vbar(x=df_show.index.get_level_values('week').to_list(), top=df_show['points'],width=0.8)
-    #p.xgrid.grid_line_color = None
-    #p.y_range.start = 0
-    #st.bokeh_chart(p, use_container_width=True)
-
     p2 = figure( title="Nombre de vols par semaine",
         toolbar_location=None, tools="",x_axis_label="Semaine (2023-2024)")    
     p2.vbar(x=df_show_count.index.get_level_values('week').to_list(), top=df_show_count['points'],width=0.8)
