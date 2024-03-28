@@ -2,7 +2,7 @@
 """
 Created on Fri Nov  3 11:36:02 2023
 
-@author: RP
+@author: 
 """
 import requests
 import xml.etree.ElementTree as ET
@@ -135,15 +135,7 @@ with st.expander('About this app'):
   st.markdown('**Contact**')
   st.warning('cfdexplorer.pro@gmail.com')
   
-st.subheader('Actu de la CFD (28/03/2024)')
 
-st.write('Alors que le printemps émerge timidement, les premiers vols de plus de 100 km ont déjà été réalisé, laissant entrevoir les beaux cross à venir !')
-st.write('Dans les Pyrénées, Florian Rivière nous a éblouis avec un vol de 107 km, survolant les paysages de Loudenvielle à Tarascon. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356513))')
-st.write('En plaine, dans les confins de la Moselle et des Ardennes, Etienne Coupez a navigué avec audace sur 114 km le long des frontières du Luxembourg et de la Belgique. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356622))')
-st.write('Du haut des Alpes, Justin Puthod a réalisé une très belle trace de 177 km, s\'envolant depuis Meruz, en direction des Aravis, vallée de Chamonix, Annecy, Bauges. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356318)) ')
-st.write('Et avec une EN-B, Johan Le Bars décolle depuis Bar sur Aube pour boucler un vol de 97 km ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20355964))')
-st.write('Ces premières prouesses aériennes ne font que présager des perfs dans les semaines à venir. La magie du parapente au printemps nous réserve encore de belles surprises.')
-st.write('')
 #df = df.sort_values('points',ascending = False)
 df = df.sort_values('date',ascending = False)
 df['month'] = df['date'].apply(lambda x: x.month)
