@@ -84,10 +84,10 @@ def import_xml_url(url):
    
             # Vous pouvez accéder à d'autres attributs de la balise 'flight' ici
         
-        dict_df = {'date':date, 
-                   'pilot':pilot, 
+        dict_df = {'pilot':pilot, 
                    'points':points,
-                   'club':club, 
+                   'club':club,
+                   'date':date,  
                    'aile':aile,
                    'aile_class':aile_class,
                    #'flightSeason':flightSeason,
@@ -132,10 +132,10 @@ with st.expander('About this app'):
   st.info('Cette app explore les données de la CFD pour la saison 2023-2024. Toutes les données sont extraites du site de la FFVL: https://parapente.ffvl.fr ')
   st.markdown('**Comment l\'utiliser ?**')
   st.warning('Naviguez dans les menus, utilisez les filtres. Plusieurs pages sont disponibles dans la barre latérale ')
-  st.markdown('**Comment l\'utiliser ?**')
-  st.warning('Contact :  cfdexplorer.pro@gmail.com')
+  st.markdown('**Contact**')
+  st.warning('cfdexplorer.pro@gmail.com')
   
-st.subheader('Actu de la CFD')
+st.subheader('Actu de la CFD (28/03/2024)')
 
 st.write('Alors que le printemps émerge timidement, les premiers vols de plus de 100 km ont déjà été réalisé, laissant entrevoir les beaux cross à venir !')
 st.write('Dans les Pyrénées, Florian Rivière nous a éblouis avec un vol de 107 km, survolant les paysages de Loudenvielle à Tarascon. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356513))')
@@ -149,6 +149,8 @@ df = df.sort_values('date',ascending = False)
 df['month'] = df['date'].apply(lambda x: x.month)
 df['year'] = df['date'].apply(lambda x: x.year)
 df['week'] = df['date'].apply(lambda x: x.week)
+
+df['flight_link']='https://parapente.ffvl.fr/cfd/liste/vol/' + df['flight_id']
 
 # Using "with" notation
 #with st.sidebar:
@@ -177,8 +179,53 @@ df_show = df_show.sort_values('points',ascending = False)
 sel_cat = st.multiselect('Catégorie d''aile selectionnée : ',list(df_show['aile_class'].unique()),list(df_show['aile_class'].unique()))
 
 df_show = df_show[(df_show['aile_class'].isin(sel_cat))].sort_values('points',ascending = False)
+
+
+df_show['Classement'] = range(0,df_show.shape[0]) 
+df_show['Classement'] = df_show['Classement'] + 1
+
+df_show = df_show.set_index('Classement')
+
+df_show = df_show[df_show.index <30]
+
+date = df_show['date']
+flight_id = df_show['flight_id']
+takeOff = df_show['takeOff']
+takeOff2 =[]
+kk=0
+for el in takeOff:
+    kk += 1
+    takeOff2.append(el + ' - ' +str(kk))
+
+pilot = df_show['pilot']
+pilot2 =[]
+kk=0
+for el in pilot:
+    kk += 1
+    pilot2.append(el + ' - ' +str(kk))
+    
+counts = df_show['points']
+    
+#p = figure(x_range=takeOff2, title="Score",
+#            toolbar_location=None, tools="")
+
+#p.vbar(x=takeOff2, top=counts,width=0.8)
+
+
+
+p = figure(x_range=pilot2, title="TOP 30 score",
+            toolbar_location=None, tools="")
+
+p.vbar(x=pilot2, top=counts,width=0.8)
+
+p.xgrid.grid_line_color = None
+p.y_range.start = 0
+p.xaxis.major_label_orientation = 3.14/2
+st.bokeh_chart(p, use_container_width=True)
+
 st.write('TOP 100')
 st.dataframe(df_show.head(100))
+
 
 #elif add_radio == "Vue pilote":
 st.subheader("Vue pilote")
@@ -210,7 +257,7 @@ p.vbar(x=takeOff2, top=counts,width=0.8)
 
 p.xgrid.grid_line_color = None
 p.y_range.start = 0
-p.xaxis.major_label_orientation = 3.14/4
+p.xaxis.major_label_orientation = 3.14/2
 st.bokeh_chart(p, use_container_width=True)
 
 #elif add_radio == "Vue Club":
@@ -262,14 +309,14 @@ counts = df_select['points']
 
 
 
-p = figure(x_range=pilot2, title="TOP 20 score",
+p = figure(x_range=pilot2, title="TOP 30 score",
             toolbar_location=None, tools="")
 
 p.vbar(x=pilot2, top=counts,width=0.8)
 
 p.xgrid.grid_line_color = None
 p.y_range.start = 0
-p.xaxis.major_label_orientation = 3.14/4
+p.xaxis.major_label_orientation = 3.14/2
 st.bokeh_chart(p, use_container_width=True)
     
 st.subheader('Nombre de vols par semaine')
@@ -280,10 +327,12 @@ df_show_count = df[["year","week","points"]].groupby(['year','week']).count()
 df_show_count = df_show_count.sort_values(['year' , 'week'],ascending = True)
 
 p2 = figure( title="Nombre de vols par semaine",
-    toolbar_location=None, tools="",x_axis_label="Semaine 2023-2024)")    
+    toolbar_location=None, tools="",x_axis_label="n° semaine (2023-2024)")    
 p2.vbar(x=df_show_count.index.get_level_values('week').to_list(), top=df_show_count['points'],width=0.8)
 p2.xgrid.grid_line_color = None
 p2.y_range.start = 0
 
 st.bokeh_chart(p2, use_container_width=True)
-  
+
+#st.subheader('Recherche libre')
+#st.dataframe(df)
