@@ -137,12 +137,13 @@ with st.expander('About this app'):
   
 st.subheader('Actu de la CFD')
 
-st.write('Alors que le printemps émerge timidement, les premiers vols de plus de 100 km ont déjà été réalisé, laissant entrevoir des exploits à venir !')
-st.write('Dans les Pyrénées, Florian Rivière nous a éblouis avec un vol époustouflant de 107 km, survolant les paysages de Loudenvielle à Tarascon. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356513)')
-st.write('De l\'autre côté, dans les confins de la Moselle, Etienne Coupez a navigué avec audace sur 114 km le long des frontières du Luxembourg et de la Belgique. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356622))')
-st.write('Et du haut des Alpes, Justin Puthod a réalisé une très belle trace avec un vol de 177 km, s\'envolant depuis Meruz, en direction des Aravis, vallée de Chamonix, Annecy, Bauges. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356318)) ')
+st.write('Alors que le printemps émerge timidement, les premiers vols de plus de 100 km ont déjà été réalisé, laissant entrevoir les beaux cross à venir !')
+st.write('Dans les Pyrénées, Florian Rivière nous a éblouis avec un vol de 107 km, survolant les paysages de Loudenvielle à Tarascon. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356513))')
+st.write('En plaine, dans les confins de la Moselle et des Ardennes, Etienne Coupez a navigué avec audace sur 114 km le long des frontières du Luxembourg et de la Belgique. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356622))')
+st.write('Du haut des Alpes, Justin Puthod a réalisé une très belle trace de 177 km, s\'envolant depuis Meruz, en direction des Aravis, vallée de Chamonix, Annecy, Bauges. ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20356318)) ')
+st.write('Et avec une EN-B, Johan Le Bars décolle depuis Bar sur Aube pour boucler un vol de 97 km ([vol](https://parapente.ffvl.fr/cfd/liste/vol/20355964))')
 st.write('Ces premières prouesses aériennes ne font que présager des perfs dans les semaines à venir. La magie du parapente au printemps nous réserve encore de belles surprises.')
-
+st.write('')
 #df = df.sort_values('points',ascending = False)
 df = df.sort_values('date',ascending = False)
 df['month'] = df['date'].apply(lambda x: x.month)
@@ -160,20 +161,7 @@ df['week'] = df['date'].apply(lambda x: x.week)
 #    st.dataframe(df.head(100))
 
 #if add_radio == "News":
-st.subheader("Actu de la CFD")
-df_show = df[["year","week","points"]].groupby(['year','week']).sum()
-df_show = df_show.sort_values(['year' , 'week'],ascending = True)
 
-df_show_count = df[["year","week","points"]].groupby(['year','week']).count()
-df_show_count = df_show_count.sort_values(['year' , 'week'],ascending = True)
-
-p2 = figure( title="Nombre de vols par semaine",
-    toolbar_location=None, tools="",x_axis_label="Semaine 2023-2024)")    
-p2.vbar(x=df_show_count.index.get_level_values('week').to_list(), top=df_show_count['points'],width=0.8)
-p2.xgrid.grid_line_color = None
-p2.y_range.start = 0
-
-st.bokeh_chart(p2, use_container_width=True)
 
 #if add_radio == "Classement dernier mois":
 # Get today's date
@@ -238,10 +226,16 @@ sel_cat = st.multiselect('Catégorie d''aile selectionnée : ',list(df_select['a
 
 df_select = df[(df['club'] == pilot) & (df['aile_class'].isin(sel_cat))].sort_values('points',ascending = False)
 
+df_select['Classement'] = range(0,df_select.shape[0]) 
+df_select['Classement'] = df_select['Classement'] + 1
+
+df_select = df_select.set_index('Classement')
+
 st.dataframe(df_select)
 
-df_select_plt = df_select['points']  
+#df_select_plt = df_select['points']  
 
+df_select = df_select[df_select.index <30]
 
 date = df_select['date']
 flight_id = df_select['flight_id']
@@ -251,18 +245,45 @@ kk=0
 for el in takeOff:
     kk += 1
     takeOff2.append(el + ' - ' +str(kk))
+
+pilot = df_select['pilot']
+pilot2 =[]
+kk=0
+for el in pilot:
+    kk += 1
+    pilot2.append(el + ' - ' +str(kk))
     
 counts = df_select['points']
     
-p = figure(x_range=takeOff2, title="Score",
+#p = figure(x_range=takeOff2, title="Score",
+#            toolbar_location=None, tools="")
+
+#p.vbar(x=takeOff2, top=counts,width=0.8)
+
+
+
+p = figure(x_range=pilot2, title="TOP 20 score",
             toolbar_location=None, tools="")
 
-p.vbar(x=takeOff2, top=counts,width=0.8)
+p.vbar(x=pilot2, top=counts,width=0.8)
 
 p.xgrid.grid_line_color = None
 p.y_range.start = 0
 p.xaxis.major_label_orientation = 3.14/4
 st.bokeh_chart(p, use_container_width=True)
     
+st.subheader('Nombre de vols par semaine')
+df_show = df[["year","week","points"]].groupby(['year','week']).sum()
+df_show = df_show.sort_values(['year' , 'week'],ascending = True)
 
+df_show_count = df[["year","week","points"]].groupby(['year','week']).count()
+df_show_count = df_show_count.sort_values(['year' , 'week'],ascending = True)
+
+p2 = figure( title="Nombre de vols par semaine",
+    toolbar_location=None, tools="",x_axis_label="Semaine 2023-2024)")    
+p2.vbar(x=df_show_count.index.get_level_values('week').to_list(), top=df_show_count['points'],width=0.8)
+p2.xgrid.grid_line_color = None
+p2.y_range.start = 0
+
+st.bokeh_chart(p2, use_container_width=True)
   
